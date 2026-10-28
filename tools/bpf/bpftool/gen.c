@@ -23,6 +23,7 @@
 
 #include "json_writer.h"
 #include "main.h"
+#include "xlated_dumper.h"
 
 #define MAX_OBJ_NAME_LEN 64
 
@@ -725,6 +726,18 @@ static int gen_trace(struct bpf_object *obj, const char *obj_name, const char *h
 		};							    \n\
 		", obj_name);
 
+#ifndef BPFTOOL_BOOTSTRAP
+	{
+		struct dump_data dd = {};
+
+		printf("/* Generated loader instructions:\n");
+		kernel_syms_load(&dd);
+		dump_xlated_plain(&dd, (void *)opts.insns, opts.insns_sz,
+				false, false);
+		kernel_syms_destroy(&dd);
+		printf("*/\n");
+	}
+#endif
 
 	codegen_attach_detach(obj, obj_name);
 
